@@ -1,74 +1,57 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// --- Step 1: Configure the database connection (PostgreSQL) ---
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql" // <-- CHANGED BACK TO STANDARD POSTGRESQL
-  // IMPORTANT: The DATABASE_URL must be defined in your .env file
-  // It should point to port 51213, e.g., "postgresql://user:password@localhost:51213/database_name?schema=public"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// --- Step 2: Define Core Models (Week 1 Focus: Auth & Fund Structure) ---
-// (Remainder of schema remains the same, defining User, Fund, Position, StockData)
-
-// 1. Core User Model for authentication and ownership
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
-  password  String   // Will store the BCrypt hash
+  password  String
   firstName String?
   lastName  String?
   createdAt DateTime @default(now())
-
-  funds     Fund[] // A User can own multiple Funds
+  funds     Fund[]
 }
 
-// 2. Fund/Portfolio Structure (The "Hedge Fund" entity)
 model Fund {
-    id          Int       @id @default(autoincrement())
-    name        String    @unique
-    owner       User      @relation(fields: [ownerId], references: [id])
-    ownerId     Int
-    initialCapital Decimal @db.Decimal(10, 2) // Initial starting amount
-    isPublic    Boolean   @default(false)     // For potential sharing/leaderboards
-    createdAt   DateTime  @default(now())
-
-    positions Position[] // Relation to trading Positions (to be defined later)
+  id             Int        @id @default(autoincrement())
+  name           String     @unique
+  ownerId        Int
+  initialCapital Decimal    @db.Decimal(10, 2)
+  isPublic       Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  owner          User       @relation(fields: [ownerId], references: [id])
+  positions      Position[]
 }
 
-// --- Placeholder Models for Future Weeks (Week 2/3 Focus) ---
-// 3. Position Model (Holds current/historical trades within a Fund)
 model Position {
-    id          Int      @id @default(autoincrement())
-    fund        Fund     @relation(fields: [fundId], references: [id])
-    fundId      Int
-    ticker      String
-    entryDate   DateTime
-    exitDate    DateTime?
-    quantity    Int
-    entryPrice  Decimal @db.Decimal(10, 4)
-    exitPrice   Decimal? @db.Decimal(10, 4)
-    isActive    Boolean @default(true)
-    
-    @@unique([fundId, ticker, entryDate]) // Cannot open the exact same position twice
+  id         Int       @id @default(autoincrement())
+  fundId     Int
+  ticker     String
+  entryDate  DateTime
+  exitDate   DateTime?
+  quantity   Int
+  entryPrice Decimal   @db.Decimal(10, 4)
+  exitPrice  Decimal?  @db.Decimal(10, 4)
+  isActive   Boolean   @default(true)
+  fund       Fund      @relation(fields: [fundId], references: [id])
+
+  @@unique([fundId, ticker, entryDate])
 }
 
-// 4. StockData Model (For storing market data locally for backtesting)
 model StockData {
-    id          Int      @id @default(autoincrement())
-    ticker      String
-    date        DateTime @db.Date
-    open        Decimal @db.Decimal(10, 4)
-    high        Decimal @db.Decimal(10, 4)
-    low         Decimal @db.Decimal(10, 4)
-    close       Decimal @db.Decimal(10, 4)
-    volume      BigInt
+  id     Int      @id @default(autoincrement())
+  ticker String
+  date   DateTime @db.Date
+  open   Decimal  @db.Decimal(10, 4)
+  high   Decimal  @db.Decimal(10, 4)
+  low    Decimal  @db.Decimal(10, 4)
+  close  Decimal  @db.Decimal(10, 4)
+  volume BigInt
 
-    // We make the combination of ticker and date unique for efficiency
-    @@unique([ticker, date])
+  @@unique([ticker, date])
 }
