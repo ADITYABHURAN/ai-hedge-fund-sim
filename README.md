@@ -75,18 +75,16 @@ Users → Funds → Positions → Trades
      -p 5432:5432 -d postgres:15
    ```
 
-3. **Configure environment variables**
+4. **Configure environment variables**
    ```bash
-   # Create .env file in backend directory
+   # Copy environment template and configure
    cd backend
-   cat > .env << EOF
-   DATABASE_URL="postgresql://postgres:password123@localhost:5432/ai_hedge_fund?schema=public"
-   JWT_SECRET="your-super-secure-jwt-secret-key-here"
-   JWT_EXPIRES_IN="7d"
-   ALPACA_API_KEY="your-alpaca-api-key"
-   ALPACA_SECRET_KEY="your-alpaca-secret-key"
-   ALPACA_BASE_URL="https://paper-api.alpaca.markets"
-   EOF
+   cp .env.example .env
+   
+   # Edit .env file with your actual credentials:
+   # - Generate strong JWT_SECRET: openssl rand -base64 64  
+   # - Get Alpaca API keys from: https://alpaca.markets/
+   # - Use paper trading credentials for development
    ```
 
 4. **Install dependencies and setup database**
@@ -174,17 +172,36 @@ curl -X POST http://localhost:3001/api/positions/sell \
   }'
 ```
 
+## 🔒 Security & Best Practices
+
+### 🔐 Environment Variables
+- **Never commit `.env` files** - They contain sensitive credentials
+- **Use `.env.example`** as a template for required variables
+- **Generate strong secrets**: Use `openssl rand -base64 64` for JWT_SECRET
+- **Paper trading first**: Always test with Alpaca paper trading credentials
+
+### 🛡️ API Security
+- **JWT Authentication**: All endpoints require valid authentication
+- **Input Validation**: Comprehensive request validation and sanitization
+- **Error Handling**: Secure error responses (no sensitive data leakage)
+- **Rate Limiting**: Consider adding rate limiting for production use
+
+### 🏦 Financial Security
+- **Paper Trading**: Use demo credentials during development
+- **Fund Limits**: Built-in capital limits ($1K min, $10M max)
+- **User Isolation**: Complete data separation between users
+- **Audit Trail**: All trades logged with timestamps and P&L
+
 ## 🧪 Testing
 
 The project includes comprehensive test scripts:
 
 ```bash
-# Test complete trading workflow
-node backend/phase6-complete-test.js
+# View example trading workflow (safe template)
+node backend/example-trading-test.js
 
-# Test individual components  
-node backend/test-sell.js
-node backend/test-sell-5.js
+# Customize with your credentials and test
+# (Replace tokens and fund IDs in the example file)
 ```
 
 **Sample Test Output:**
