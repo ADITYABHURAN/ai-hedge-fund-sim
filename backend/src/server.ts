@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { MarketDataFetcher } from './services/dataFetcher';
 import { FundController } from './controllers/fundController';
+import { PositionController } from './controllers/positionController';
 
 // Initialize Prisma Client and Market Data Service
 const prisma = new PrismaClient();
@@ -551,6 +552,22 @@ app.delete('/api/funds/:fundId', protect, async (req: AuthRequest, res: Response
 });
 
 // =============================================================================
+// TRADING & POSITION ROUTES (Phase 6)
+// =============================================================================
+
+// POST /api/positions/buy - Execute buy order (protected route)
+app.post('/api/positions/buy', protect, PositionController.buyStock);
+
+// POST /api/positions/sell - Execute sell order (protected route)
+app.post('/api/positions/sell', protect, PositionController.sellStock);
+
+// GET /api/positions - Get all user positions across all funds (protected route)
+app.get('/api/positions', protect, PositionController.getAllUserPositions);
+
+// GET /api/positions/fund/:fundId - Get positions for specific fund (protected route)
+app.get('/api/positions/fund/:fundId', protect, PositionController.getFundPositions);
+
+// =============================================================================
 // MARKET DATA ROUTES (Phase 4)
 // =============================================================================
 
@@ -763,7 +780,12 @@ app.listen(PORT, () => {
   console.log(`   List Funds: GET http://localhost:${PORT}/api/funds`);
   console.log(`   Fund Details: GET http://localhost:${PORT}/api/funds/:fundId`);
   console.log(`   Delete Fund: DELETE http://localhost:${PORT}/api/funds/:fundId`);
-  console.log(`\n📈 MARKET DATA:`);
+  console.log(`\n� TRADING & POSITIONS:`);
+  console.log(`   Buy Stock: POST http://localhost:${PORT}/api/positions/buy`);
+  console.log(`   Sell Stock: POST http://localhost:${PORT}/api/positions/sell`);
+  console.log(`   All Positions: GET http://localhost:${PORT}/api/positions`);
+  console.log(`   Fund Positions: GET http://localhost:${PORT}/api/positions/fund/:fundId`);
+  console.log(`\n�📈 MARKET DATA:`);
   console.log(`   Data Ingestion: POST http://localhost:${PORT}/api/data/ingest`);
   console.log(`   Latest Data: GET http://localhost:${PORT}/api/data/latest?symbols=AAPL,MSFT`);
   console.log(`   Historical Data: GET http://localhost:${PORT}/api/data/historical/AAPL?startDate=2024-01-01&endDate=2024-01-31`);
