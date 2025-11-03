@@ -5,10 +5,15 @@ import { PrismaClient } from '@prisma/client';
 import { MarketDataFetcher } from './services/dataFetcher';
 import { FundController } from './controllers/fundController';
 import { PositionController } from './controllers/positionController';
+import { StrategyController } from './controllers/strategyController';
 
 // Initialize Prisma Client and Market Data Service
 const prisma = new PrismaClient();
 const marketDataFetcher = new MarketDataFetcher();
+
+// Export prisma and types for use in other modules
+export { prisma };
+export { AuthRequest };
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -568,6 +573,29 @@ app.get('/api/positions', protect, PositionController.getAllUserPositions);
 app.get('/api/positions/fund/:fundId', protect, PositionController.getFundPositions);
 
 // =============================================================================
+// STRATEGY ROUTES (Phase 7)
+// =============================================================================
+
+// GET /api/strategies - Get all registered strategies (protected route)
+app.get('/api/strategies', protect, StrategyController.getStrategies);
+
+// POST /api/strategies/analyze - Analyze strategies for a ticker (protected route)
+app.post('/api/strategies/analyze', protect, StrategyController.analyzeStrategies);
+
+// POST /api/strategies/execute - Execute strategy recommendations (protected route)
+app.post('/api/strategies/execute', protect, StrategyController.executeStrategyTrades);
+
+// GET /api/strategies/performance/:fundId - Get strategy performance metrics (protected route)
+app.get('/api/strategies/performance/:fundId', protect, StrategyController.getStrategyPerformance);
+
+// =============================================================================
+// BACKTESTING ROUTES (Phase 7B)
+// =============================================================================
+
+import backtestController from './backtestController';
+app.use('/api/backtests', backtestController);
+
+// =============================================================================
 // MARKET DATA ROUTES (Phase 4)
 // =============================================================================
 
@@ -766,6 +794,9 @@ app.use((req: Request, res: Response) => {
   });
 });
 
+// Initialize trading strategies
+StrategyController.initializeDefaultStrategies();
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 AI Hedge Fund API Server running on port ${PORT}`);
@@ -785,6 +816,17 @@ app.listen(PORT, () => {
   console.log(`   Sell Stock: POST http://localhost:${PORT}/api/positions/sell`);
   console.log(`   All Positions: GET http://localhost:${PORT}/api/positions`);
   console.log(`   Fund Positions: GET http://localhost:${PORT}/api/positions/fund/:fundId`);
+  console.log(`\n🧠 AI TRADING STRATEGIES:`);
+  console.log(`   List Strategies: GET http://localhost:${PORT}/api/strategies`);
+  console.log(`   Analyze Strategies: POST http://localhost:${PORT}/api/strategies/analyze`);
+  console.log(`   Execute Strategies: POST http://localhost:${PORT}/api/strategies/execute`);
+  console.log(`   Strategy Performance: GET http://localhost:${PORT}/api/strategies/performance/:fundId`);
+  console.log(`\n🧪 STRATEGY BACKTESTING:`);
+  console.log(`   Run Backtest: POST http://localhost:${PORT}/api/backtests/run`);
+  console.log(`   Available Strategies: GET http://localhost:${PORT}/api/backtests/strategies`);
+  console.log(`   Validate Parameters: POST http://localhost:${PORT}/api/backtests/validate`);
+  console.log(`   Backtest History: GET http://localhost:${PORT}/api/backtests/history/:userId`);
+  console.log(`   Risk Analysis: POST http://localhost:${PORT}/api/backtests/risk-analysis`);
   console.log(`\n�📈 MARKET DATA:`);
   console.log(`   Data Ingestion: POST http://localhost:${PORT}/api/data/ingest`);
   console.log(`   Latest Data: GET http://localhost:${PORT}/api/data/latest?symbols=AAPL,MSFT`);
