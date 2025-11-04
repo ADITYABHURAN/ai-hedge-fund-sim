@@ -20,6 +20,21 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(express.json());
 
+// CORS middleware to allow frontend connections
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+    return;
+  }
+  
+  next();
+});
+
 // Types for JWT payload
 interface JwtPayload {
   userId: number;
@@ -96,7 +111,23 @@ const generateToken = (userId: number, email: string): string => {
 
 // Routes
 
-// Health check route
+// Root route
+app.get('/', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: 'AI Hedge Fund API is running!',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth/*',
+      funds: '/api/funds/*',
+      strategies: '/api/strategies/*',
+      autoTrading: '/api/auto-trading/*'
+    }
+  });
+});
+
+// Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({
     success: true,
@@ -576,8 +607,8 @@ app.get('/api/positions/fund/:fundId', protect, PositionController.getFundPositi
 // STRATEGY ROUTES (Phase 7)
 // =============================================================================
 
-// GET /api/strategies - Get all registered strategies (protected route)
-app.get('/api/strategies', protect, StrategyController.getStrategies);
+// GET /api/strategies - Get all registered strategies (public for frontend testing)
+app.get('/api/strategies', StrategyController.getStrategies);
 
 // POST /api/strategies/analyze - Analyze strategies for a ticker (protected route)
 app.post('/api/strategies/analyze', protect, StrategyController.analyzeStrategies);
@@ -594,6 +625,13 @@ app.get('/api/strategies/performance/:fundId', protect, StrategyController.getSt
 
 import backtestController from './backtestController';
 app.use('/api/backtests', backtestController);
+
+// =============================================================================
+// AUTOMATED TRADING ROUTES (Phase 8A)
+// =============================================================================
+
+import autoTradingController from './autoTradingController';
+app.use('/api/auto-trading', autoTradingController);
 
 // =============================================================================
 // MARKET DATA ROUTES (Phase 4)
@@ -797,10 +835,25 @@ app.use((req: Request, res: Response) => {
 // Initialize trading strategies
 StrategyController.initializeDefaultStrategies();
 
+// Add root route for basic info
+app.get('/', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: 'AI Hedge Fund API Server',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/api/health',
+      docs: 'See server console for full endpoint list'
+    }
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 AI Hedge Fund API Server running on port ${PORT}`);
   console.log(`\n📊 CORE ENDPOINTS:`);
+  console.log(`   Root: http://localhost:${PORT}/`);
   console.log(`   Health check: http://localhost:${PORT}/api/health`);
   console.log(`\n🔐 AUTHENTICATION:`);
   console.log(`   Signup: POST http://localhost:${PORT}/api/auth/signup`);
@@ -827,6 +880,13 @@ app.listen(PORT, () => {
   console.log(`   Validate Parameters: POST http://localhost:${PORT}/api/backtests/validate`);
   console.log(`   Backtest History: GET http://localhost:${PORT}/api/backtests/history/:userId`);
   console.log(`   Risk Analysis: POST http://localhost:${PORT}/api/backtests/risk-analysis`);
+  console.log(`\n🤖 AUTOMATED TRADING:`);
+  console.log(`   Start Auto-Trading: POST http://localhost:${PORT}/api/auto-trading/start`);
+  console.log(`   Stop Auto-Trading: POST http://localhost:${PORT}/api/auto-trading/stop`);
+  console.log(`   Pause/Resume: POST http://localhost:${PORT}/api/auto-trading/pause|resume`);
+  console.log(`   Active Sessions: GET http://localhost:${PORT}/api/auto-trading/sessions`);
+  console.log(`   Session Details: GET http://localhost:${PORT}/api/auto-trading/sessions/:sessionId`);
+  console.log(`   Config Template: GET http://localhost:${PORT}/api/auto-trading/config/template`);
   console.log(`\n�📈 MARKET DATA:`);
   console.log(`   Data Ingestion: POST http://localhost:${PORT}/api/data/ingest`);
   console.log(`   Latest Data: GET http://localhost:${PORT}/api/data/latest?symbols=AAPL,MSFT`);
