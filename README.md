@@ -1,3 +1,4 @@
+11
 # 🤖 AI Hedge Fund Simulation
 
 A sophisticated hedge fund management and trading simulation system built with modern TypeScript, PostgreSQL, and advanced trading algorithms. This project provides a complete platform for simulating hedge fund operations, from portfolio management to automated trading strategies.
